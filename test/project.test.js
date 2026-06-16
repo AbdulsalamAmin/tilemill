@@ -51,6 +51,7 @@ it('collection should list projects', function(done) {
 });
 
 var _updated;
+var demo02Updated;
 it('model should load JSON', function(done) {
     assert.response(core,
         { url: '/api/Project/demo_01' },
@@ -101,6 +102,7 @@ it('PUT should create a project', function(done) {
         { status: 200 },
         function(res) {
             var body = JSON.parse(res.body);
+            demo02Updated = body._updated;
             cleanProject(body);
             var expected = {
                 tiles: ["http://127.0.0.1:20008/tile/demo_02/{z}/{x}/{y}.png"],
@@ -108,6 +110,31 @@ it('PUT should create a project', function(done) {
             };
             // https://github.com/tilemill-project/tilemill/issues/1552
             //assert.deepEqual(expected, body, diff.compare(expected, body));
+            done();
+        }
+    );
+});
+
+it('PUT should advance project update timestamp', function(done) {
+    var data = readJSON('create-project');
+    data._updated = demo02Updated + 60000;
+    data.Stylesheet[0].data = data.Stylesheet[0].data.replace('#fff', '#fefefe');
+    assert.response(core,
+        {
+            url: '/api/Project/demo_02',
+            method: 'PUT',
+            headers: {
+                'content-type': 'application/json',
+                'cookie': 'bones.token=' + data['bones.token']
+            },
+            data: JSON.stringify(data)
+        },
+        { status: 200 },
+        function(res) {
+            var body = JSON.parse(res.body);
+            assert.ok(body._updated > data._updated, body._updated + ' <= ' + data._updated);
+            assert.ok(body.tiles[0].indexOf('updated=' + body._updated) !== -1);
+            demo02Updated = body._updated;
             done();
         }
     );

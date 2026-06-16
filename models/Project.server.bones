@@ -18,6 +18,7 @@ var settings = Bones.plugin.config;
 var tileURL = _('http://<%=url%>/tile/<%=id%>/{z}/{x}/{y}.<%=format%>?updated=<%=updated%>&metatile=<%=metatile%>&scale=<%=scale%>').template();
 var request = require('request');
 var existsSync = require('fs').existsSync || require('path').existsSync;
+var updatedFile = '.updated';
 
 // object tracks status of tileserver's status localizing a project
 // key:model.id value:friendly message about activity or ''
@@ -140,15 +141,35 @@ function mtimeProject(model, callback) {
     var modelPath = path.resolve(path.join(settings.files, 'project', model.id));
     readdir(modelPath, function(err, files) {
         if (err) return callback(err);
-        var max = _(files).chain()
+        var mtimes = _(files).chain()
             .filter(function(stat) {
                 return stat.basename.charAt(0) !== '.' && stat.isFile(); //ignore hidden files
             })
             .pluck('mtime')
             .map(Date.parse)
-            .max()
             .value();
-        callback(null, max);
+        var max = mtimes.length ? _(mtimes).max() : 0;
+        fs.readFile(path.join(modelPath, updatedFile), 'utf8', function(err, data) {
+            if (err && err.code !== 'ENOENT') return callback(err);
+            var updated = err ? 0 : parseInt(data, 10);
+            if (isNaN(updated)) updated = 0;
+            callback(null, Math.max(max, updated));
+        });
+    });
+}
+
+// Write an explicit update marker so cache keys advance even on filesystems
+// with coarse mtime precision.
+function updateProjectMtime(model, callback) {
+    var modelPath = path.resolve(path.join(settings.files, 'project', model.id));
+    mtimeProject(model, function(err, mtime) {
+        if (err) return callback(err);
+        var previous = parseInt(model.get('_updated'), 10);
+        if (isNaN(previous)) previous = 0;
+        var updated = Math.max(mtime || 0, +new Date, previous + 1);
+        fs.writeFile(path.join(modelPath, updatedFile), String(updated), function(err) {
+            callback(err, updated);
+        });
     });
 }
 
@@ -400,7 +421,7 @@ function saveProject(model, callback) {
     },
     function(err) {
         if (err) throw err;
-        mtimeProject(model, this);
+        updateProjectMtime(model, this);
     },
     function(err, updated) {
         if (err) throw err;
