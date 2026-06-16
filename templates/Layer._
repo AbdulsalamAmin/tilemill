@@ -1,14 +1,18 @@
 <%
 var Datasource = get('Datasource') || {};
+var plainFile = !Datasource.type || !_(['sqlite', 'tiles']).include(Datasource.type);
+var extentCache = Datasource.extent_cache || 'auto';
 var enabled = {
-    file: isNew() || (Datasource.file && Datasource.type != 'sqlite'),
+    file: isNew() || (Datasource.file && plainFile),
     sqlite: isNew() || Datasource.type === 'sqlite',
     postgis: (isNew() && _(window.abilities.datasources).include('postgis')) ||
-        Datasource.type === 'postgis'
+        Datasource.type === 'postgis',
+    tiles: (isNew() && _(window.abilities.datasources).include('tiles')) ||
+        Datasource.type === 'tiles'
 };
 var advancedOptions = function(obj) {
     var omit = [
-        'type', 'file',
+        'type', 'file', 'url',
         'table', 'host', 'port', 'user', 'password', 'dbname',
         'extent', 'key_field', 'geometry_field', 'type', 'attachdb',
         'srs', 'id', 'project', 'extent_cache', 'layer','all_layers'
@@ -42,6 +46,10 @@ var connectionOptions = function(obj) {
     ><a href='#layer-postgis' class='<%= !enabled.postgis ? 'disabled' : '' %> button large'>
         <span class='icon reverse postgis labeled'></span>
         PostGIS
+    </a
+    ><a href='#layer-tiles' class='<%= !enabled.tiles ? 'disabled' : '' %> button large'>
+        <span class='icon reverse cloud labeled'></span>
+        Tiles
     </a>
   </div>
 
@@ -140,28 +148,49 @@ var connectionOptions = function(obj) {
     <li>
       <label for='extent'>Extent</label>
       <select name='Datasource.extent_cache'>
-        <option value='auto' <% if (Datasource.extent_cache === 'auto' || !Datasource.extent_cache) { %>selected='selected'<% } %>>
+        <option value='auto' <% if (extentCache === 'auto') { %>selected='selected'<% } %>>
           Pre-calculate
         </option>
-        <option value='dynamic' <% if (Datasource.extent_cache === 'dynamic') { %>selected='selected'<% } %>>
+        <option value='dynamic' <% if (extentCache === 'dynamic') { %>selected='selected'<% } %>>
           Dynamic
         </option>
-        <option value='custom' <% if (Datasource.extent_cache === 'custom') { %>selected='selected'<% } %>>
+        <option value='custom' <% if (extentCache === 'custom') { %>selected='selected'<% } %>>
           Custom
         </option>
       </select>
-      <input type='text' name='Datasource.extent' <% if (Datasource.extent_cache === 'auto' || !Datasource.extent_cache ) { %>style="display:none"<% } %>
+      <input type='text' name='Datasource.extent' <% if (extentCache !== 'custom') { %>style="display:none"<% } %>
           value='<%=Datasource.extent%>' size='40' placeholder='' />
-      <a href='#extentCacheFlush' class='button open' <% if (Datasource.extent_cache === 'custom') { %>style="display:none"<% } %>'>Clear cache</a>
-      <small for='auto' class='description'<% if (Datasource.extent_cache !== 'auto' && Datasource.extent_cache) { %>style="display:none"<% }%>>
-          Auto-calculate and cache the extent to limit the query by.
+      <a href='#extentCacheFlush' class='button open' <% if (extentCache !== 'auto') { %>style="display:none"<% } %>>Clear cache</a>
+      <small for='auto' class='description'<% if (extentCache !== 'auto') { %>style="display:none"<% }%>>
+          Recalculate and cache the extent on layer save to limit the query by.
       </small>
-      <small for='dynamic'class='description' <% if (Datasource.extent_cache !== 'dynamic') { %>style="display:none"<% } %>>
-          Dynamically calculate extent for each map save (can be slow).
+      <small for='dynamic'class='description' <% if (extentCache !== 'dynamic') { %>style="display:none"<% } %>>
+          Do not store an extent. Let Mapnik calculate it dynamically.
       </small>
-      <small for='custom' class='description' <% if (Datasource.extent_cache !== 'custom') { %>style="display:none"<% } %>>
+      <small for='custom' class='description' <% if (extentCache !== 'custom') { %>style="display:none"<% } %>>
           Limit the query with a custom 'minx,miny,maxx,maxy' in the projection of the data.
       </small>
+    </li>
+    <% } %>
+
+    <% if (type === 'tiles') { %>
+    <li class='expand'>
+      <label for='url'>Vector tile URL</label>
+      <input type='text' name='Datasource.url' value='<%=Datasource.url%>' size='68' placeholder='https://server/{z}/{x}/{y}.pbf' />
+      <small class='description'>Mapbox Vector Tile URL template passed to Mapnik's <code>tiles</code> input plugin. Use <code>{z}</code>, <code>{x}</code>, and <code>{y}</code> placeholders.</small>
+    </li>
+    <li>
+      <label for='layer'>Vector layer</label>
+      <input type='text' name='Datasource.layer' value='<%=Datasource.layer%>' size='30' placeholder='land' />
+      <span class='description'>Required for vector MBTiles/PMTiles. Shortbread examples: <code>land</code>, <code>water_polygons</code>, <code>buildings</code>, <code>streets</code>.</span>
+    </li>
+    <li class='expand'>
+      <label for='file'>MBTiles/PMTiles</label>
+      <input type='text' class='browsable' name='Datasource.file' value='<%=Datasource.file%>' size='68' placeholder='/path/to/tiles.mbtiles or /path/to/tiles.pmtiles' />
+      <a href='#favorite' class='icon favorite'>Favorite</a>
+      <a href='#open' class='button open'>Browse</a>
+      <div class='browser sunken fill-s'></div>
+      <small class='description'>Use either a vector tile URL template above or a local MBTiles/PMTiles archive here.</small>
     </li>
     <% } %>
 
@@ -201,4 +230,3 @@ var connectionOptions = function(obj) {
   </ul></form>
   <% }); %>
 </div>
-

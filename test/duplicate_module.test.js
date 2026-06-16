@@ -2,22 +2,17 @@ var assert = require('assert');
 var exec = require('child_process').exec;
 
 var count_module = function(name,callback) {
-    var cmd = 'npm ls ' + name;
+    var cmd = 'npm ls --parseable ' + name;
     exec(cmd,
         function (error, stdout, stderr) {
-            // Added check to remove deduped results.  CJS 1/24/19
-            var pattern = new RegExp(name+'@\\d+.\\d+.\\d+\\s+\\\n','g')
-            var match = stdout.match(pattern);
-            if (!match) {
-                return callback(null,0);
-            }
-            return callback(null,match.length);
+            var count = stdout.trim() ? stdout.trim().split(/\n/).length : 0;
+            return callback(null,count);
     });
 };
 
 describe('Testing Config Functions [config loading pwnage] (duplicate_module.test.js)', function() {
 
-['optimist','sqlite3','mapnik'].forEach(function(mod) {
+['optimist','sqlite3','@mapnik/mapnik'].forEach(function(mod) {
     it('there should only be one ' + mod + ' module otherwise you are hosed', function(done) {
          count_module(mod, function(err,count) {
             if (err) throw err;

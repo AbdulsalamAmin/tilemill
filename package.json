@@ -35,8 +35,8 @@
         "JSV": "4.0.2",
         "backbone": "1.4.0",
         "backbone-dirty": "1.1.3",
-        "bones": "https://github.com/tilemill-project/bones.git#1.3.31",
-        "carto": "1.0.1",
+        "bones": "https://codeload.github.com/tilemill-project/bones/tar.gz/1.3.31",
+        "carto": "1.2.0",
         "chrono": "1.0.5",
         "connect": "3.6.6",
         "express": "4.16.4",
@@ -44,9 +44,8 @@
         "glob": "7.1.3",
         "jquery": "3.3.1",
         "jsdom": "13.2.0",
-        "mapnik": "~3.7.2",
-        "@mapbox/mbtiles": "0.10.0",
-        "millstone": "https://github.com/tilemill-project/millstone.git#v0.6.18",
+        "@mapbox/mbtiles": "0.12.1",
+        "millstone": "file:vendor/millstone",
         "mkdirp": "0.5.1",
         "modestmaps": "3.3.5",
         "optimist": "0.6.1",
@@ -55,13 +54,14 @@
         "sax": "1.2.4",
         "semver": "5.6.0",
         "@mapbox/sphericalmercator": "1.1.0",
-        "sqlite3": "4.0.6",
+        "sqlite3": "5.1.7",
         "step": "1.0.0",
-        "tilelive": "https://github.com/tilemill-project/tilelive.git#v5.14.0",
-        "@mapbox/tilelive-mapnik": "1.0.0",
+        "tilelive": "https://codeload.github.com/tilemill-project/tilelive/tar.gz/v5.14.0",
+        "@mapbox/tilelive-mapnik": "file:vendor/tilelive-mapnik",
         "underscore": "1.9.1",
-        "wax": "https://github.com/tilemill-project/wax.git#v6.4.4",
-        "xmlhttprequest": "1.8.0"
+        "wax": "https://codeload.github.com/tilemill-project/wax/tar.gz/v6.4.4",
+        "xmlhttprequest": "1.8.0",
+        "@mapnik/mapnik": "4.7.8"
     },
     "devDependencies": {
         "jshint": "2.10.1",
@@ -79,6 +79,7 @@
     },
     "engineStrict": true,
     "engines": {
-        "node": "0.8.x || 0.10.x || 4.x || 8.x"
+        "node": ">=16.0.0",
+        "npm": ">=8.0.0"
     }
 }

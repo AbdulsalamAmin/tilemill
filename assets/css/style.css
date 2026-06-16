@@ -1075,6 +1075,7 @@ li:hover .icon { display:block; }
 .icon.geometry-multipoint      { background-position:-220px -180px; }
 .icon.geometry-multipolygon    { background-position:-240px -180px; }
 .icon.geometry-raster     { background-position:-360px -180px; }
+.icon.geometry-collection { background-position:-520px -180px; }
 .icon.layers            { background-position:-520px -180px; }
 .icon.file              { background-position:-540px -180px; }
 .icon.postgis           { background-position:-660px -180px; }
@@ -1111,6 +1112,7 @@ li:hover .icon { display:block; }
 .reverse.geometry-multipoint      { background-position:-220px -200px; }
 .reverse.geometry-multipolygon    { background-position:-240px -200px; }
 .reverse.geometry-raster     { background-position:-360px -200px; }
+.reverse.geometry-collection { background-position:-520px -200px; }
 .reverse.layers         { background-position:-520px -200px; }
 .reverse.file           { background-position:-540px -200px; }
 .reverse.postgis        { background-position:-660px -200px; }

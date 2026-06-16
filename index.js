@@ -7,7 +7,6 @@ var path = require('path');
 process.env.MAPNIK_FONT_PATH = path.join(__dirname,'fonts');
 
 var fs = require('fs');
-// node v6 -> v8 compatibility
 var existsSync = require('fs').existsSync || require('path').existsSync;
 
 process.title = 'tilemill';
@@ -21,7 +20,8 @@ if (process.platform === 'win32') {
     // HOME is undefined on windows
     process.env.HOME = process.env.USERPROFILE;
     // Add custom library paths to the PATH
-    process.env.PATH = path.join(__dirname,"node_modules/mapnik/lib/binding/");
+    process.env.PATH = path.join(__dirname, 'node_modules', '@mapnik', 'mapnik', 'prebuilds', 'win32-x64') +
+        path.delimiter + process.env.PATH;
 }
 
 // Default --config flag to user's home .tilemill.json config file.

@@ -10,7 +10,7 @@ We are looking for people to get involved!  Take a look at some of the current F
 # General Info
 TileMill is a modern map design studio powered by [Node.js](https://nodejs.org) and [Mapnik](https://mapnik.org).
 
-- TileMill is tested on Linux with Node 8.11.3 LTS, and on MacOS 10.14 with Node 8.15.0 lts/carbon
+- TileMill is tested with Node.js 18 and uses the Mapnik 4 Node bindings.
 - TileMill currently only works in server mode, there is no standalone GUI.  Your browser is used for the interface.
 - There are no native packages provided. Installation requires cloning this repo. See details below under *Installation*.
 - Tilemill should theoretically work on the Windows platform, but it isn't tested.
@@ -18,11 +18,8 @@ TileMill is a modern map design studio powered by [Node.js](https://nodejs.org) 
 
 # Dependencies
 
-- Mapnik > v3.6.2 (but may work on earlier versions)
-- Node.js:  (earlier Node.js versions may work, but are not tested)
-	- Ubuntu: v8.11.x
-	- OSX: v8.15.x lts/carbon
-- Protobuf: Ubunto: these need to be installed: libprotobuf-lite and protoc
+- Mapnik 4 via the `@mapnik/mapnik` npm package
+- Node.js >= 16.0.0 and npm >= 8.0.0
 
 
 # Installation
@@ -30,8 +27,8 @@ TileMill is a modern map design studio powered by [Node.js](https://nodejs.org) 
 
     git clone https://github.com/tilemill-project/tilemill.git
     cd tilemill
-    nvm install lts/carbon
-    nvm use v8.15.0
+    nvm install 18
+    nvm use 18
     npm install
     npm start
 

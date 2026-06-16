@@ -1,9 +1,17 @@
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
-var mapnik = require('mapnik');
+var mapnik = require('@mapnik/mapnik');
 var Step = require('step');
 var millstone = require('millstone');
+
+function isValidExtent(extent) {
+    return Array.isArray(extent) &&
+        extent.length === 4 &&
+        extent.every(function(v) { return typeof v === 'number' && isFinite(v); }) &&
+        extent[0] <= extent[2] &&
+        extent[1] <= extent[3];
+}
 
 models.Datasource.prototype.sync = function(method, model, success, error) {
     if (method !== 'read') return error('Method not supported.');
@@ -56,6 +64,14 @@ models.Datasource.prototype.sync = function(method, model, success, error) {
                 delete mml.Layer[0].Datasource.layer_by_index;
             }
 
+            if (mml.Layer[0].Datasource.type == 'postgis') {
+                if (mml.Layer[0].Datasource.extent_cache === 'auto' ||
+                    mml.Layer[0].Datasource.extent_cache === 'dynamic') {
+                    delete mml.Layer[0].Datasource.extent;
+                }
+                delete mml.Layer[0].Datasource.extent_cache;
+            }
+
             // simplistic validation that subselects have the key_field string present
             // not a proper parser, but this is not the right place to be parsing SQL
             // https://github.com/tilemill-project/tilemill/issues/1509
@@ -101,39 +117,46 @@ models.Datasource.prototype.sync = function(method, model, success, error) {
             if (!(source.type == "raster") && (options.features || options.info)) {
                 var featureset = source.featureset();
                 for (var i = 0, feat;
-                    i < row_limit && (feat = featureset.next(true));
+                    featureset && i < row_limit && (feat = featureset.next(true));
                     i++) {
                     features.push(feat.attributes());
                 }
             }
 
-            // Convert datasource extent to lon/lat when saving
-            var layerProj = new mapnik.Projection(mml.Layer[0].srs),
-                unProj = new mapnik.Projection('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'),
-                trans = new mapnik.ProjTransform(layerProj, unProj),
-                unproj_extent = trans.forward(source.extent());
-            // clamp to valid unproj_extents
-            (unproj_extent[0] < -180) && (unproj_extent[0] = -180);
-            (unproj_extent[1] < -85.051) && (unproj_extent[1] = -85.051);
-            (unproj_extent[2] > 180) && (unproj_extent[2] = 180);
-            (unproj_extent[3] > 85.051) && (unproj_extent[3] = 85.051);
+            var extent = source.extent();
+            var unproj_extent = null;
 
-            if (unproj_extent[2] < unproj_extent[0] || unproj_extent[3] < unproj_extent[1]) {
-                throw new Error("Detected out of bounds geographic extent (" + unproj_extent + ") for layer '" + options.id + "'. Please ensure that the SRS for this layer is correct. Its native extent is '" + source.extent() + "'");
+            // Empty vector datasources can return Mapnik's inverted sentinel extent.
+            // Do not project it, otherwise proj may throw "Invalid latitude".
+            if (isValidExtent(extent)) {
+                // Convert datasource extent to lon/lat when saving
+                var layerProj = new mapnik.Projection(mml.Layer[0].srs),
+                    unProj = new mapnik.Projection('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'),
+                    trans = new mapnik.ProjTransform(layerProj, unProj);
+                unproj_extent = trans.forward(extent);
+                // clamp to valid unproj_extents
+                (unproj_extent[0] < -180) && (unproj_extent[0] = -180);
+                (unproj_extent[1] < -85.051) && (unproj_extent[1] = -85.051);
+                (unproj_extent[2] > 180) && (unproj_extent[2] = 180);
+                (unproj_extent[3] > 85.051) && (unproj_extent[3] = 85.051);
+
+                if (!isValidExtent(unproj_extent)) {
+                    throw new Error("Detected out of bounds geographic extent (" + unproj_extent + ") for layer '" + options.id + "'. Please ensure that the SRS for this layer is correct. Its native extent is '" + extent + "'");
+                }
             }
 
             var desc = source.describe();
             var datasource = {
                 id: options.id,
                 project: options.project,
-                url: options.file,
+                url: options.url || options.file,
                 fields: desc.fields,
                 features: options.features ? features : [],
                 type: desc.type,
                 geometry_type: desc.type === 'raster' ? 'raster' : desc.geometry_type,
                 unproj_extent: unproj_extent,
                 sticky_options:sticky_options,
-                extent: source.extent().join(',')
+                extent: isValidExtent(extent) ? extent.join(',') : null
             };
 
 
@@ -142,7 +165,7 @@ models.Datasource.prototype.sync = function(method, model, success, error) {
                 var values = _(features).pluck(f);
                 var type = datasource.fields[f];
                 datasource.fields[f] = { type: type };
-                if (options.features || options.info) {
+                if ((options.features || options.info) && features.length) {
                     datasource.fields[f].max = type === 'String'
                         ? (function() {
                             var val = _(values).max(function(v) { return (v||'').length });

@@ -6,8 +6,8 @@ view.prototype.events = {
     'click a[href=#favorite]': 'favoriteToggle',
     'keyup input[name$=file], input[name=connection]': 'favoriteUpdate',
     'change input[name$=file], input[name=connection]': 'favoriteUpdate',
-    'keyup input[name$=file], .layer-postgis textarea': 'placeholderUpdate',
-    'change input[name$=file], .layer-postgis textarea': 'placeholderUpdate',
+    'keyup input[name$=file], input[name$=url], .layer-postgis textarea': 'placeholderUpdate',
+    'change input[name$=file], input[name$=url], .layer-postgis textarea': 'placeholderUpdate',
     'click a[href=#cacheFlush]': 'cacheFlush',
     'change select[name=Datasource.extent_cache]': 'extentSelect',
     'click a[href=#extentCacheFlush]': 'extentCacheFlush',
@@ -107,6 +107,17 @@ view.prototype.extentSelect = function(ev) {
 view.prototype.extentCacheFlush = function(ev) {
     $('input[name="Datasource.extent"]').val('');
     return false;
+};
+
+view.prototype.prepareExtentCache = function(attr) {
+    if (!attr.Datasource || attr.Datasource.type !== 'postgis') return;
+
+    attr.Datasource.extent_cache = attr.Datasource.extent_cache || 'auto';
+
+    if (attr.Datasource.extent_cache === 'auto' ||
+        attr.Datasource.extent_cache === 'dynamic') {
+        delete attr.Datasource.extent;
+    }
 };
 
 view.prototype.nameToSrs = function(ev) {
@@ -233,6 +244,7 @@ view.prototype.browse = function(ev) {
     var id = (function(form) {
         if (form.hasClass('layer-file')) return 'file';
         if (form.hasClass('layer-sqlite')) return 'sqlite';
+        if (form.hasClass('layer-tiles')) return 'file';
         if (form.hasClass('layer-postgis')) return 'favoritesPostGIS';
     })(form);
     var location = $('input.browsable', form).val();
@@ -298,7 +310,7 @@ view.prototype.save = function(e) {
 
     // Database datasources do not have the luxury of SRS autodetection.
     // Fallback to web mercator if unset.
-    if (_(['sqlite', 'postgis']).include(attr.Datasource.type)) {
+    if (_(['sqlite', 'postgis', 'tiles']).include(attr.Datasource.type)) {
         attr.srs = attr.srs || this.model.SRS['900913'];
     } else {
         attr.srs = attr.srs || '';
@@ -306,7 +318,7 @@ view.prototype.save = function(e) {
 
 
     // Advanced options.
-    var regular = _(['type', 'file','table', 'host', 'port', 'user', 
+    var regular = _(['type', 'file', 'url', 'table', 'host', 'port', 'user',
         'password', 'dbname', 'extent', 'key_field', 'geometry_field',
         'type', 'attachdb', 'srs', 'id', 'project', 'extent_cache', 'layer', 'all_layers']);
 
@@ -315,6 +327,18 @@ view.prototype.save = function(e) {
         if (regular.include(k)) result[k] = v;
     })
     attr.Datasource = _.extend(result, attr.advanced);
+
+    if (attr.Datasource.type === 'tiles') {
+        if (attr.Datasource.file) {
+            delete attr.Datasource.url;
+        } else if (attr.Datasource.url) {
+            delete attr.Datasource.file;
+        } else {
+            new views.Modal(new Error('A vector tile URL or MBTiles/PMTiles file is required.'));
+            return false;
+        }
+    }
+
     var sublayer = this.$('.sublayer');
     if (sublayer) {
         var layer_select = sublayer.children('select[name=layer]');
@@ -357,13 +381,14 @@ view.prototype.save = function(e) {
     }
     // Autoname this layer if id is blank.
     attr.name =
-    attr.id = (attr.id || this.autoname(attr.Datasource.file||attr.Datasource.table)).replace('#','');
+    attr.id = (attr.id || this.autoname(attr.Datasource.file||attr.Datasource.table||attr.Datasource.url)).replace('#','');
     attr['class'] = (attr['class'] || '').replace('.','');
 
     if (attr.Datasource.table) {
         // wrap bare SELECT statements, even multi-line, in an identifiable subquery label which can be removed later.
         attr.Datasource.table = attr.Datasource.table.replace(/^ *(select\s[\s\S]*from[\s\S]*)$/i,"($1) as _subquery");
     }
+    this.prepareExtentCache(attr);
 
     $(this.el).addClass('loading').addClass('restartable');
     var error = _(function(m, e) {
@@ -386,7 +411,8 @@ view.prototype.save = function(e) {
         success: _(function(model, resp) {
             $(this.el).removeClass('loading').removeClass('restartable');
             if (attr.Datasource && attr.Datasource.extent_cache === 'auto') {
-                attr.Datasource.extent = resp.extent;
+                if (resp.extent) attr.Datasource.extent = resp.extent;
+                else delete attr.Datasource.extent;
             }
             if (resp.sticky_options) {
                 Object.keys(resp.sticky_options).forEach(function(opt) {
@@ -421,4 +447,3 @@ view.prototype.cacheFlush = function(ev) {
     });
     return false;
 };
-

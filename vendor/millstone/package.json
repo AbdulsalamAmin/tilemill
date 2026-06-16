@@ -1,0 +1,43 @@
+{
+  "name": "millstone",
+  "version": "0.6.18",
+  "description": "Prepares datasources in an MML file for consumption in Mapnik",
+  "main": "./lib/millstone.js",
+  "bin": {
+    "millstone": "./bin/millstone"
+  },
+  "scripts": {
+    "test": "mocha -R spec --timeout 10000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mapbox/millstone.git"
+  },
+  "author": {
+    "name": "MapBox",
+    "email": "info@mapbox.com",
+    "url": "http://mapbox.com/"
+  },
+  "licenses": [
+    {
+      "type": "BSD"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/mapbox/millstone/issues"
+  },
+  "homepage": "https://github.com/mapbox/millstone#readme",
+  "dependencies": {
+    "generic-pool": "~2.4.1",
+    "mime": "~1.2.11",
+    "mkdirp": "~0.5.0",
+    "optimist": "~0.6.1",
+    "request": "2.x",
+    "step": "~0.0.5",
+    "underscore": "~1.6.0",
+    "adm-zip": "0.5.16"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  }
+}

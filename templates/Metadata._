@@ -146,6 +146,11 @@ var get = _(project.get).bind(project);
     <div class='slider' data-key='scale' data-step='0.1' data-min='1' data-max='5'></div>
     <small class='description'>Factor to scale map by.</small>
   </li>
+  <li>
+    <label for='refreshLayerExtents'>Layer extents</label>
+    <input type='checkbox' name='_refreshLayerExtents' value='1' />
+    <span class='description'>Refresh cached PostGIS extents for all non-custom layers before saving.</span>
+  </li>
   <% } %>
   <% if (type === 'tiles') { %>
   <li>

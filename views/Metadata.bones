@@ -35,7 +35,9 @@ view.prototype.initialize = function(options) {
         'updateSlider',
         'updateSize',
         'selectLayer',
-        'setAspect');
+        'setAspect',
+        'refreshLayerExtents',
+        'refreshLayerExtent');
     this.sm = new SphericalMercator;
     this.type = options.type;
     this.title = options.title;
@@ -355,6 +357,7 @@ view.prototype.updateSlider = function() {
 view.prototype.save = function() {
     var attr = Bones.utils.form(this.$('form'), this.model);
     var save = attr._saveProject;
+    var refreshLayerExtents = attr._refreshLayerExtents;
     var error = function(m, e) { new views.Modal(e); };
     $('input[type=submit]').addClass('disabled');
     $('#meta-map').addClass('loading');
@@ -372,6 +375,7 @@ view.prototype.save = function() {
     delete attr.zooms;
     delete attr.format_custom;
     delete attr._saveProject;
+    delete attr._refreshLayerExtents;
     attr = _(attr).reduce(function(memo, val, key) {
         var allowEmpty = ['description', 'attribution', 'note'];
         if (val !== '' || _(allowEmpty).include(key)) memo[key] = val;
@@ -381,7 +385,14 @@ view.prototype.save = function() {
     // If only editing the Project settings, just save the Settings and exit
     if (this.model === this.project) {
         if (!this.project.set(attr, {error:error})) return false;
-        this.project.save({}, { success:this.success, error:error});
+        var saveProject = _(function() {
+            this.project.save({}, { success:this.success, error:error});
+        }).bind(this);
+        if (refreshLayerExtents) {
+            this.refreshLayerExtents(saveProject, error);
+        } else {
+            saveProject();
+        }
         return false;
     }
 
@@ -433,6 +444,60 @@ view.prototype.save = function() {
     return false;
 };
 
+view.prototype.refreshLayerExtents = function(done, error) {
+    var layers = this.project.get('Layer');
+    var queue = [];
+
+    layers.each(function(layer) {
+        var datasource = layer.get('Datasource') || {};
+        var extentCache = datasource.extent_cache || 'auto';
+        if (datasource.type === 'postgis' && extentCache !== 'custom') {
+            queue.push(layer);
+        }
+    });
+
+    var i = 0;
+    var next = _(function() {
+        if (i >= queue.length) return done();
+        this.refreshLayerExtent(queue[i++], next, error);
+    }).bind(this);
+    next();
+};
+
+view.prototype.refreshLayerExtent = function(layer, done, error) {
+    var datasource = _(layer.get('Datasource') || {}).clone();
+    var extentCache = datasource.extent_cache || 'auto';
+
+    if (datasource.type !== 'postgis' || extentCache === 'custom') return done();
+
+    delete datasource.extent;
+    datasource.id = layer.get('id');
+    datasource.srs = layer.get('srs');
+    datasource.project = this.project.get('id');
+
+    (new models.Datasource(datasource)).fetch({
+        success: _(function(model, resp) {
+            var updatedDatasource = _(layer.get('Datasource') || {}).clone();
+            if ((updatedDatasource.extent_cache || 'auto') === 'auto') {
+                if (resp.extent) updatedDatasource.extent = resp.extent;
+                else delete updatedDatasource.extent;
+            } else if (updatedDatasource.extent_cache === 'dynamic') {
+                delete updatedDatasource.extent;
+            }
+            if (resp.sticky_options) {
+                Object.keys(resp.sticky_options).forEach(function(opt) {
+                    updatedDatasource[opt] = resp.sticky_options[opt];
+                });
+            }
+            layer.set({Datasource: updatedDatasource});
+            if (resp.geometry_type) layer.set({geometry: resp.geometry_type});
+            layer.set({extent: resp.unproj_extent});
+            done();
+        }).bind(this),
+        error: error
+    });
+};
+
 view.prototype.selectLayer = function() {
     var val = this.$('select.maplayer-selection').val();
     var layer = this.map.getLayerAt(0);
@@ -452,4 +517,3 @@ view.prototype.selectLayer = function() {
 
     this.boxselector.add(this.map);
 }
-

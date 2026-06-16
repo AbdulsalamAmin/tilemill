@@ -4,8 +4,9 @@ var create_files = require('../lib/create_files');
 var path = require('path');
 var Step = require('step');
 var defaults = models.Config.defaults;
-var mapnik = require('mapnik');
+var mapnik = require('@mapnik/mapnik');
 var carto = new require('carto');
+var cartoVersion = require('../lib/carto_version');
 var cartoRef = new carto.tree.Reference(null);
 if (mapnik.register_default_fonts) mapnik.register_default_fonts();
 if (mapnik.register_system_fonts) mapnik.register_system_fonts();
@@ -98,7 +99,7 @@ command.prototype.bootstrap = function(plugin, callback) {
     settings.files = path.resolve(settings.files.replace(/^~/, process.env.HOME));
     settings.coreUrl = settings.coreUrl || '127.0.0.1:' + settings.port;
     settings.tileUrl = settings.tileUrl || '127.0.0.1:' + settings.tilePort;
-    cartoRef.setVersion(mapnik.versions.mapnik);
+    cartoRef.setVersion(cartoVersion(mapnik.versions.mapnik));
 
     Bones.plugin.abilities = {
         // Get the unique version (from the VERSION file) that will be used in the parens in the heading
@@ -232,4 +233,3 @@ command.prototype.initialize = function(plugin, callback) {
         callback && callback();
     });
 };
-

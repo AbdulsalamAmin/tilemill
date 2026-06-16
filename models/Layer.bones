@@ -38,7 +38,7 @@ model.prototype.schema = {
         },
         'geometry': {
             'type': 'string',
-            'enum': ['polygon', 'multipolygon', 'point', 'multipoint', 'linestring', 'multilinestring', 'raster', 'unknown']
+            'enum': ['polygon', 'multipolygon', 'point', 'multipoint', 'linestring', 'multilinestring', 'raster', 'collection', 'unknown']
         },
         'Datasource': {
             'type': 'object',
@@ -105,4 +105,3 @@ model.prototype.validateAsync = function(attributes, options) {
         error: options.error
     });
 };
-

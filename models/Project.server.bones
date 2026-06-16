@@ -6,7 +6,8 @@ var readdir = require('../lib/fsutil.js').readdir;
 var mkdirp = require('../lib/fsutil.js').mkdirp;
 var rm = require('../lib/fsutil.js').rm;
 var carto = require('carto');
-var mapnik = require('mapnik');
+var mapnik = require('@mapnik/mapnik');
+var cartoVersion = require('../lib/carto_version');
 var yaml = require('js-yaml');
 if (mapnik.register_default_fonts) mapnik.register_default_fonts();
 if (mapnik.register_system_fonts) mapnik.register_system_fonts();
@@ -393,7 +394,7 @@ function saveProject(model, callback) {
 
                 //Try to guess type of datasource and set it to project file for better compatibility with kosmtik
                 if (!l.Datasource.type) {
-                    var ext = path.extname(l.Datasource.file);
+                    var ext = path.extname(l.Datasource.file).toLowerCase();
                     if (ext) {
                         var type = millstone.valid_ds_extensions[ext];
                         if (type) {
@@ -495,7 +496,7 @@ function compileStylesheet(mml, callback) {
     // try/catch here as per https://github.com/tilemill-project/tilemill/issues/1370
     // with carto 1.x, it no longer throws an error for compile errors, instead returned data is null
     try {
-        var xml = new carto.Renderer(env, { mapnik_version: mapnik.versions.mapnik }).render(mml);
+        var xml = new carto.Renderer(env, { version: cartoVersion(mapnik.versions.mapnik) }).render(mml);
         if (xml.data != null) {
             return callback(null, xml);
         } else {
