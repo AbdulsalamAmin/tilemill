@@ -206,7 +206,7 @@
                     editor.focus();
                 } else if (code === 8) {
                     backspace();
-                    complete(e);
+                    complete(editor);
                     cancelEvent(event);
                 } else if (code != 38 && code != 40 && !event.shiftKey) {
                     close();

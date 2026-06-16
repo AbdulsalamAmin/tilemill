@@ -181,7 +181,9 @@ view.prototype.makeStylesheet = function(model) {
 
     model.codemirror.setOption("extraKeys", {
             Tab: function(cm) {
-                cm.indentSelection();
+                if (!cartoCompleter.complete(cm)) {
+                    cm.indentSelection();
+                }
             },
             "Ctrl-Space" : function(cm) {
                 cartoCompleter.complete(cm);
