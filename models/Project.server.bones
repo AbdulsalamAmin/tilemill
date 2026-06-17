@@ -480,8 +480,7 @@ function compileStylesheet(mml, callback) {
     var fonts = styles.match(/font-directory:[\s]*url\(['"]*([^'"\)]*)['"]*\)/);
     if (fonts) {
         fonts = fonts[1];
-        // @TODO - will be broken on windows
-        fonts = fonts.charAt(0) !== '/'
+        fonts = !path.isAbsolute(fonts)
             ? path.join(settings.files, 'project', mml.id, fonts)
             : fonts;
         mapnik.register_fonts(fonts);

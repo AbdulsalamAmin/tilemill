@@ -34,9 +34,9 @@ PDF and SVG provide vector-based exports of your map, which are useful if you're
 
 ## Mapnik XML export
 
-TileMill's __Mapnik XML__ export option is aimed at advanced users who are familiar with [Mapnik](http://mapnik.org/), the software that TileMill uses under the hood to handles rendering your maps.
+TileMill's __Mapnik XML__ export option is aimed at advanced users who are familiar with [Mapnik](http://mapnik.org/), the software that TileMill uses under the hood to render maps.
 
-TileMill uses [CartoCSS](https://github.com/mapbox/carto) to translate your CSS styles and layer definitions into the XML format that Mapnik can read each time you save your project. Most users will not need to directly use this underlying Mapnik XML, but it is easy to leverage if you want to move your raw map styles out of TileMill to set up for rendering directly with Mapnik, or other tools that work with Mapnik like [TileStache](http://tilestache.org/) and [Invar](https://github.com/onyxfish/invar/).
+TileMill uses [CartoCSS](https://github.com/mapbox/carto) to translate your CSS styles and layer definitions into Mapnik 4-compatible XML each time you save your project. Most users will not need to directly use this underlying Mapnik XML, but it is useful if you want to move your raw map styles out of TileMill to render directly with Mapnik 4 or other tools that can consume Mapnik XML.
 
 <small class='note' markdown='1'>
 __Note:__ If you export a Mapnik XML file into a TileMill project directory, this XML style will __override__ all of the layers and stylesheets for that project. Any changes you make to the project in TileMill will not be visible until the XML file is moved.
@@ -117,4 +117,3 @@ Options:
 <tr><td><strong>--verbose=</strong>on|off                  </td><td>verbose logging (Default: "on")</td></tr>
 <tr><td><strong>--config=</strong>[path]                   </td><td>Path to JSON configuration file.</td></tr>
 </table>
-

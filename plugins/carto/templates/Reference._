@@ -17,9 +17,9 @@
 
 <h2>Selectors</h2>
 
-<p><a target='_blank' href='http://www.tilemill.com'>TileMill</a> supports the <a target='_blank' href="https://github.com/mapbox/carto">carto</a> map styling language. It should be familiar to CSS users and easy to pick up for everyone else.</p>
+<p><a target='_blank' href='http://www.tilemill.com'>TileMill</a> supports the <a target='_blank' href="https://github.com/mapbox/carto">CartoCSS</a> map styling language. CartoCSS is compiled to Mapnik XML before rendering, and this build targets Mapnik <%= obj.mapnik_version || '4' %> using the Carto/Mapnik reference <%= obj.mapnik_reference_version || obj.version %>.</p>
 
-<p>A simple carto style looks like</p>
+<p>A simple CartoCSS style looks like</p>
 
 <pre class='carto-snippet'>
 #world {

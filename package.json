@@ -69,7 +69,7 @@
         "difflet": "1.0.1"
     },
     "scripts": {
-        "start": "./index.js",
+        "start": "node ./index.js",
         "test": "mocha --timeout 100000",
         "postinstall": "node ./lib/gitutil.js",
         "debug-test": "mocha --inspect-brk --timeout 100000"

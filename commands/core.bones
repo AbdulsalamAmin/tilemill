@@ -118,7 +118,10 @@ command.prototype.bootstrap = function(plugin, callback) {
         tileUrl: settings.tileUrl,
         tilePort: settings.tilePort,
         tilemill: JSON.parse(fs.readFileSync(path.resolve(__dirname + '/../package.json'),'utf8')),
-        carto: cartoRef.data,
+        carto: _(cartoRef.data).extend({
+            mapnik_version: mapnik.versions.mapnik,
+            mapnik_reference_version: cartoVersion(mapnik.versions.mapnik)
+        }),
         fonts: mapnik.fonts(),
         datasources: mapnik.datasources(),
         exports: {
@@ -147,7 +150,7 @@ command.prototype.bootstrap = function(plugin, callback) {
     try {
         create_files.init_dirs(['export', 'project', 'cache'],settings);
         // Apply server-side mixins/overrides.
-        var db = require('backbone-dirty')(settings.files + '/app.db');
+        var db = require('backbone-dirty')(path.join(settings.files, 'app.db'));
         db.dirty.on('error', console.log);
         Backbone.sync = db.sync;
     } catch (err) {

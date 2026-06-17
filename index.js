@@ -17,8 +17,8 @@ process.title = 'tilemill';
 process.argv[0] = 'node';
 
 if (process.platform === 'win32') {
-    // HOME is undefined on windows
-    process.env.HOME = process.env.USERPROFILE;
+    // HOME is often undefined on Windows, but tests and callers may provide it.
+    process.env.HOME = process.env.HOME || process.env.USERPROFILE || process.env.USERHOME;
     // Add custom library paths to the PATH
     process.env.PATH = path.join(__dirname, 'node_modules', '@mapnik', 'mapnik', 'prebuilds', 'win32-x64') +
         path.delimiter + process.env.PATH;

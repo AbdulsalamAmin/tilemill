@@ -5,7 +5,7 @@ var core;
 var tile;
 
 function readJSON(name) {
-    var json = fs.readFileSync(path.resolve(__dirname + '/fixtures/' + name + '.json'), 'utf8');
+    var json = fs.readFileSync(path.resolve(__dirname, 'fixtures', name + '.json'), 'utf8');
     return JSON.parse(json);
 }
 

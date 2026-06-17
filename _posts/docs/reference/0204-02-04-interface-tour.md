@@ -105,5 +105,4 @@ Unlike what you may be used to from CSS or common word processor interfaces, the
 
 **Carto reference**
 
-Clicking on the ‘Carto’ icon will display an abbreviated reference of the different properties you can use in your stylesheet.
-
+Clicking on the ‘Carto’ icon will display an abbreviated reference of the CartoCSS properties you can use in your stylesheet. The reference is generated from the Mapnik 4-compatible Carto reference used by this TileMill build.

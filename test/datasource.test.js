@@ -6,7 +6,7 @@ var core;
 var tile;
 
 function readJSON(name) {
-    var json = fs.readFileSync(path.resolve(__dirname + '/fixtures/' + name + '.json'), 'utf8');
+    var json = fs.readFileSync(path.resolve(__dirname, 'fixtures', name + '.json'), 'utf8');
     return JSON.parse(json);
 }
 
@@ -21,19 +21,20 @@ before(function(done) {
 });
 
 after(function(done) {
-    core.close();
-    tile.close();
+    if (core) core.close();
+    if (tile) tile.close();
     done();
 });
 
 it('GET sqlite', function(done) {
+    var sqlitePath = path.join(__dirname, 'fixtures', 'countries.sqlite');
     assert.response(tile,
-        { url: '/datasource/world?file=' + encodeURIComponent(__dirname + '/fixtures/countries.sqlite') + '&table=countries&id=world&type=sqlite&project=demo_01&srs=%2Bproj%3Dmerc+%2Ba%3D6378137+%2Bb%3D6378137+%2Blat_ts%3D0.0+%2Blon_0%3D0.0+%2Bx_0%3D0.0+%2By_0%3D0+%2Bk%3D1.0+%2Bunits%3Dm+%2Bnadgrids%3D%40null+%2Bwktext+%2Bno_defs+%2Bover' },
+        { url: '/datasource/world?file=' + encodeURIComponent(sqlitePath) + '&table=countries&id=world&type=sqlite&project=demo_01&srs=%2Bproj%3Dmerc+%2Ba%3D6378137+%2Bb%3D6378137+%2Blat_ts%3D0.0+%2Blon_0%3D0.0+%2Bx_0%3D0.0+%2By_0%3D0+%2Bk%3D1.0+%2Bunits%3Dm+%2Bnadgrids%3D%40null+%2Bwktext+%2Bno_defs+%2Bover' },
         { status: 200 },
         function(res) {
             var body = JSON.parse(res.body);
             var datasource = readJSON('datasource-sqlite');
-            datasource.url = __dirname + '/fixtures/countries.sqlite';
+            datasource.url = sqlitePath;
             assert.equal(datasource.id, body.id);
             assert.equal(datasource.project, body.project);
             assert.deepEqual(datasource.fields, body.fields);

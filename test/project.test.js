@@ -6,7 +6,7 @@ var core;
 var tile;
 
 function readJSON(name) {
-    var json = fs.readFileSync(path.resolve(__dirname + '/fixtures/' + name + '.json'), 'utf8');
+    var json = fs.readFileSync(path.resolve(__dirname, 'fixtures', name + '.json'), 'utf8');
     return JSON.parse(json);
 }
 
@@ -191,8 +191,8 @@ it('PUT should fail with invalid id', function(done) {
             message: "Filename may only include alphanumeric characters, dashes and underscores."
         }, body);
         assert['throws'](function() {
-            fs.statSync('./test/fixtures/files/project/Bad !@!ID');
-        }, "ENOENT, No such file or directory './test/fixtures/files/project/Bad !@!ID'");
+            fs.statSync(path.join(__dirname, 'fixtures', 'files', 'project', 'Bad !@!ID'));
+        }, /ENOENT/);
         done();
     });
 });

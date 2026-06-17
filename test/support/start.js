@@ -4,31 +4,31 @@ process.argv[2] = 'test';
 var http = require('http');
 var util = require('util');
 var assert = require('assert');
-var exec = require('child_process').exec;
+var execFile = require('child_process').execFile;
 var path = require('path');
 var fs = require('fs');
-var basedir = path.resolve(__dirname + '/..');
+var basedir = path.resolve(__dirname, '..');
 var fsutil = require('../../lib/fsutil.js');
 
-process.env.HOME = path.resolve(__dirname + '/../fixtures/files');
+process.env.HOME = path.resolve(__dirname, '..', 'fixtures', 'files');
 
 // Remove stale config file if present.
-try { fs.unlinkSync(process.env.HOME + '/.tilemill/config.json'); }
+try { fs.unlinkSync(path.join(process.env.HOME, '.tilemill', 'config.json')); }
 catch (err) { if (err.code !== 'ENOENT') throw err }
 
 // Load application.
 require('../..');
 var tilemill = require('bones').plugin;
-tilemill.config.files = path.resolve(__dirname + '/../fixtures/files');
+tilemill.config.files = path.resolve(__dirname, '..', 'fixtures', 'files');
 tilemill.config.examples = false;
 
 module.exports.reset = function(done) {
     // Create a clean environment.
-    var files = basedir + '/fixtures/files/';
-    var projects = basedir + '/fixtures/pristine/project/';
+    var files = path.join(basedir, 'fixtures', 'files');
+    var projects = path.join(basedir, 'fixtures', 'pristine', 'project');
     fsutil.rm(files,function(err) {
         if (err && err.code != 'ENOENT') throw err;
-        fsutil.cprSync(projects,files+'project/');
+        fsutil.cprSync(projects, path.join(files, 'project'));
         var command = tilemill.start(function() {
             command.servers['Core'].close();
             command.servers['Tile'].close();
@@ -44,18 +44,23 @@ module.exports.start = function(done) {
 };
 
 module.exports.startPostgis = function(done) {
-    var insert = '\
-        psql -d postgres -c "DROP DATABASE IF EXISTS tilemill_test;" ; \
-        createdb -E UTF8 -T template_postgis tilemill_test ;  \
-        psql -d tilemill_test -f ' + basedir + '/fixtures/tilemill_test.sql';
-    exec(insert, function(err,stdout,stderr) {
-        if (err) throw err;
-        if (stderr) {
-            console.log(stderr);
+    var commands = [
+        ['psql', ['-d', 'postgres', '-c', 'DROP DATABASE IF EXISTS tilemill_test;']],
+        ['createdb', ['-E', 'UTF8', '-T', 'template_postgis', 'tilemill_test']],
+        ['psql', ['-d', 'tilemill_test', '-f', path.join(basedir, 'fixtures', 'tilemill_test.sql')]]
+    ];
+    (function next() {
+        var command = commands.shift();
+        if (!command) {
+            console.warn('Inserted postgres fixture.');
+            return module.exports.start(done);
         }
-        console.warn('Inserted postgres fixture.');
-        module.exports.start(done);
-    });
+        execFile(command[0], command[1], function(err, stdout, stderr) {
+            if (err) throw err;
+            if (stderr) console.log(stderr);
+            next();
+        });
+    })();
 };
 
 /**
@@ -189,4 +194,3 @@ assert.match = function(str, regexp, msg) {
     msg = msg || util.inspect(str) + ' does not match ' + util.inspect(regexp);
     assert.ok(regexp.test(str), msg);
 };
-
